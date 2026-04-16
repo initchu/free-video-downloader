@@ -288,7 +288,7 @@ class VideoSummarizer:
             api_key=api_key,
             base_url="https://openrouter.ai/api/v1",
         )
-        self.model = "deepseek/deepseek-chat:free"
+        self.model = "deepseek/deepseek-chat"
 
     def summarize_stream(self, subtitle_text: str, language: str = "zh"):
         """流式生成视频总结，yield 每个 token"""
