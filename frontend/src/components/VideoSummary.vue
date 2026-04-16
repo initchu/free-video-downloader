@@ -41,15 +41,7 @@
               <span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
               AI 正在生成中...
             </div>
-            <!-- 免费用户剩余次数提示 -->
-            <div v-if="quotaInfo && quotaInfo.remaining >= 0 && !loading" class="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-between">
-              <span class="text-sm text-blue-700">
-                今日剩余 AI 总结次数：<strong>{{ quotaInfo.remaining }}</strong> / {{ quotaInfo.limit }}
-              </span>
-              <button v-if="quotaInfo.remaining <= 1" @click="emit('need-vip')" class="text-xs font-medium text-primary hover:underline cursor-pointer">
-                升级 VIP 无限使用
-              </button>
-            </div>
+            <!-- 配额提示已禁用 -->
           </div>
 
           <!-- 字幕文本 Tab -->
