@@ -203,7 +203,7 @@ async function handleParse(url) {
     const res = await parseVideo(url)
     if (res.success) {
       videoData.value = res.data
-      summaryKey.value++
+      // 不自动触发 AI 总结，用户需要手动点击
     } else {
       alert('解析失败：' + (res.error || '未知错误'))
     }
@@ -233,7 +233,20 @@ async function handleDownload(formatId) {
     a.click()
     window.URL.revokeObjectURL(url)
   } catch (err) {
-    alert('下载失败：' + (err.message || '请稍后重试'))
+    // responseType: 'blob' 时，错误响应体也是 blob，需要手动解析
+    let msg = err.message || '请稍后重试'
+    if (err.response?.data instanceof Blob) {
+      try {
+        const text = await err.response.data.text()
+        const json = JSON.parse(text)
+        msg = json?.detail?.error || json?.detail || msg
+      } catch {}
+    } else {
+      msg = err.response?.data?.detail?.error 
+        || err.response?.data?.detail 
+        || msg
+    }
+    alert('下载失败：' + msg)
   } finally {
     downloading.value = false
   }
