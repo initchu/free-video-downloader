@@ -203,7 +203,7 @@ async function handleParse(url) {
     const res = await parseVideo(url)
     if (res.success) {
       videoData.value = res.data
-      // 不自动触发 AI 总结，用户需要手动点击
+      // do not auto-trigger AI summary, user clicks manually
     } else {
       alert('解析失败：' + (res.error || '未知错误'))
     }
@@ -233,7 +233,7 @@ async function handleDownload(formatId) {
     a.click()
     window.URL.revokeObjectURL(url)
   } catch (err) {
-    // responseType: 'blob' 时，错误响应体也是 blob，需要手动解析
+      // responseType: 'blob' means error response body is also a blob, parse manually
     let msg = err.message || '请稍后重试'
     if (err.response?.data instanceof Blob) {
       try {

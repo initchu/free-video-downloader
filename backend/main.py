@@ -91,8 +91,8 @@ async def parse_video(req: ParseRequest):
 async def download_video(req: DownloadRequest):
     """服务端下载视频后提供文件下载（抖音走专用模块）"""
     try:
-        # 添加日志以便调试
-        print(f"[下载请求] URL: {req.url}, Format ID: {req.format_id}")
+        # debug logging
+        print(f"[download] URL: {req.url}, Format ID: {req.format_id}")
         
         loop = asyncio.get_event_loop()
         if is_douyin_url(req.url):
@@ -113,7 +113,7 @@ async def download_video(req: DownloadRequest):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"[下载错误] {type(e).__name__}: {str(e)}")
+        print(f"[download error] {type(e).__name__}: {str(e)}")
         raise HTTPException(status_code=400, detail={
             "success": False,
             "error": f"下载失败: {str(e)}"
