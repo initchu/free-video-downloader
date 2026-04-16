@@ -1,0 +1,22 @@
+# 谷歌云 VPS 部署用 systemd 服务文件
+# 使用方法：
+#   sudo cp saveany.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable saveany
+#   sudo systemctl start saveany
+
+[Unit]
+Description=SaveAny Backend (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/saveany/backend
+EnvironmentFile=/opt/saveany/backend/.env
+ExecStart=/opt/saveany/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
