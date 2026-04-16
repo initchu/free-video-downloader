@@ -36,6 +36,7 @@
                 :videoTitle="videoData.title"
                 :user="currentUser"
                 :key="summaryKey"
+                :autoStart="summaryAutoStart"
                 @loading-change="handleSummarizeLoadingChange"
                 @need-login="showAuthModal('login')"
                 @need-vip="handleOpenVip"
@@ -186,8 +187,10 @@ const videoData = ref(null)
 const currentUrl = ref('')
 const summaryKey = ref(0)
 const summarizing = ref(false)
+const summaryAutoStart = ref(false)
 
 function handleSummarize() {
+  summaryAutoStart.value = true
   summaryKey.value++
 }
 
