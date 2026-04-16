@@ -1,5 +1,6 @@
 <template>
   <div class="min-h-screen flex flex-col bg-bg-main">
+    <PasswordGate v-if="!unlocked" @unlocked="unlocked = true" />
     <AppHeader
       :user="currentUser"
       @login="showAuthModal('login')"
@@ -93,9 +94,13 @@ import PricingSection from './components/PricingSection.vue'
 import PlatformSection from './components/PlatformSection.vue'
 import AppFooter from './components/AppFooter.vue'
 import AuthModal from './components/AuthModal.vue'
+import PasswordGate from './components/PasswordGate.vue'
 import { parseVideo, downloadViaServer } from './api/video.js'
 import { getSavedUser, fetchMe, logout as logoutApi, isLoggedIn } from './api/auth.js'
 import { createCheckoutSession } from './api/payment.js'
+
+const SITE_PASSWORD = import.meta.env.VITE_SITE_PASSWORD || ''
+const unlocked = ref(!SITE_PASSWORD || localStorage.getItem('site_unlocked') === '1')
 
 const demoMode = ref(false)
 let enterCount = 0
