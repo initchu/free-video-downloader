@@ -275,6 +275,7 @@ const props = defineProps({
   videoUrl: { type: String, required: true },
   videoTitle: { type: String, default: '' },
   user: { type: Object, default: null },
+  autoStart: { type: Boolean, default: false },
 })
 const emit = defineEmits(['loading-change', 'need-login', 'need-vip'])
 
@@ -750,7 +751,7 @@ function scrollChatToBottom() {
 }
 
 onMounted(() => {
-  startSummarize()
+  if (props.autoStart) startSummarize()
   document.addEventListener('fullscreenchange', onFullscreenChange)
   document.addEventListener('webkitfullscreenchange', onFullscreenChange)
   document.addEventListener('click', handleClickOutside)
