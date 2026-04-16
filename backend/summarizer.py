@@ -286,9 +286,9 @@ class VideoSummarizer:
             raise ValueError("DEEPSEEK_API_KEY 环境变量未设置")
         self.client = OpenAI(
             api_key=api_key,
-            base_url="https://api.deepseek.com",
+            base_url="https://openrouter.ai/api/v1",
         )
-        self.model = "deepseek-chat"
+        self.model = "deepseek/deepseek-chat:free"
 
     def summarize_stream(self, subtitle_text: str, language: str = "zh"):
         """流式生成视频总结，yield 每个 token"""
