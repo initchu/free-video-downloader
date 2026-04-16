@@ -153,17 +153,7 @@ async function restoreUser() {
 
 // ===== VIP 购买 =====
 async function handleOpenVip() {
-  if (!isLoggedIn()) {
-    showAuthModal('login')
-    return
-  }
-  try {
-    const { checkout_url } = await createCheckoutSession('monthly')
-    window.location.href = checkout_url
-  } catch (err) {
-    const msg = err.response?.data?.detail || err.message || '创建支付失败'
-    alert(typeof msg === 'string' ? msg : JSON.stringify(msg))
-  }
+  alert('VIP 功能暂未开放')
 }
 
 // ===== 支付结果处理 =====
