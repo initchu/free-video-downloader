@@ -128,6 +128,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { API_BASE } from '../api/config.js'
 
 const props = defineProps({
   video: { type: Object, required: true },
@@ -138,7 +139,7 @@ defineEmits(['download', 'summarize'])
 
 const thumbnailUrl = computed(() => {
   if (!props.video.thumbnail) return ''
-  return '/api/proxy/thumbnail?url=' + encodeURIComponent(props.video.thumbnail)
+  return `${API_BASE}/api/proxy/thumbnail?url=` + encodeURIComponent(props.video.thumbnail)
 })
 
 const selectedFormat = ref(
