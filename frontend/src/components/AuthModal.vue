@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { register, login } from '../api/auth'
 
 const props = defineProps({
@@ -99,6 +99,11 @@ const props = defineProps({
 const emit = defineEmits(['close', 'success'])
 
 const isLogin = ref(props.initialMode === 'login')
+
+// Sync mode every time the modal opens
+watch(() => props.visible, (val) => {
+  if (val) isLogin.value = props.initialMode === 'login'
+})
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
