@@ -47,8 +47,6 @@
       </section>
       <FeatureSection />
       <HowToSection />
-      <ComparisonSection />
-      <PricingSection :user="currentUser" @open-vip="handleOpenVip" @need-login="showAuthModal('login')" />
       <PlatformSection />
     </main>
     <AppFooter />
@@ -90,8 +88,6 @@ import VideoResult from './components/VideoResult.vue'
 import VideoSummary from './components/VideoSummary.vue'
 import FeatureSection from './components/FeatureSection.vue'
 import HowToSection from './components/HowToSection.vue'
-import ComparisonSection from './components/ComparisonSection.vue'
-import PricingSection from './components/PricingSection.vue'
 import PlatformSection from './components/PlatformSection.vue'
 import AppFooter from './components/AppFooter.vue'
 import AuthModal from './components/AuthModal.vue'
