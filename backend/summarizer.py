@@ -18,7 +18,8 @@ def _is_bilibili_url(url: str) -> bool:
 class SubtitleExtractor:
     """从视频 URL 提取平台字幕（人工字幕 > 自动字幕）"""
 
-    PREFERRED_LANGS = ["zh-Hans", "zh", "zh-CN", "en", "ja", "ko"]
+    # Also covers YouTube auto-caption variants like "zh-Hans-orig", "en-orig"
+    PREFERRED_LANGS = ["zh-Hans", "zh", "zh-CN", "zh-TW", "en", "ja", "ko"]
     SUBTITLE_FORMAT = "json3"
 
     def extract(self, url: str) -> dict:
@@ -170,21 +171,34 @@ class SubtitleExtractor:
     def _pick_best_subtitle(
         self, manual_subs: dict, auto_subs: dict
     ) -> tuple[str, Optional[str], str]:
-        """按优先级选择最佳字幕，返回 (lang, url, type)"""
-        for lang in self.PREFERRED_LANGS:
-            if lang in manual_subs:
-                formats = manual_subs[lang]
-                url = self._get_format_url(formats)
-                if url:
-                    return lang, url, "manual"
+        """Pick best subtitle by priority, return (lang, url, type).
+        Also handles YouTube variant keys like 'zh-Hans-orig', 'en-orig'.
+        """
+        def find_in(subs: dict, sub_type: str):
+            # Exact match first
+            for lang in self.PREFERRED_LANGS:
+                if lang in subs:
+                    url = self._get_format_url(subs[lang])
+                    if url:
+                        return lang, url, sub_type
+            # Prefix match for variants (e.g. "en-orig", "zh-Hans-orig")
+            for lang in self.PREFERRED_LANGS:
+                for key in subs:
+                    if key.startswith(lang):
+                        url = self._get_format_url(subs[key])
+                        if url:
+                            return key, url, sub_type
+            return None
 
-        for lang in self.PREFERRED_LANGS:
-            if lang in auto_subs:
-                formats = auto_subs[lang]
-                url = self._get_format_url(formats)
-                if url:
-                    return lang, url, "auto"
+        result = find_in(manual_subs, "manual")
+        if result:
+            return result
 
+        result = find_in(auto_subs, "auto")
+        if result:
+            return result
+
+        # Fallback: just take whatever is available
         if manual_subs:
             first_lang = next(iter(manual_subs))
             url = self._get_format_url(manual_subs[first_lang])
@@ -209,16 +223,19 @@ class SubtitleExtractor:
         return formats[0].get("url") if formats else None
 
     def _download_and_parse(self, url: str, lang: str, sub_type: str) -> list[dict]:
-        """通过 yt-dlp 下载字幕文件并解析为分段列表"""
+        """Download subtitle via yt-dlp and parse into segment list.
+        Enable both writesubtitles and writeautomaticsub to handle YouTube
+        cases where the detected type may not match what yt-dlp actually writes.
+        """
         with tempfile.TemporaryDirectory() as tmp_dir:
             ydl_opts = {
                 "quiet": True,
                 "no_warnings": True,
                 "noplaylist": True,
                 "skip_download": True,
-                "writesubtitles": sub_type == "manual",
-                "writeautomaticsub": sub_type == "auto",
-                "subtitleslangs": [lang],
+                "writesubtitles": True,       # always enable both
+                "writeautomaticsub": True,     # so YouTube auto-captions are not missed
+                "subtitleslangs": [lang, f"{lang}-orig"],  # include variant keys
                 "subtitlesformat": "vtt",
                 "outtmpl": os.path.join(tmp_dir, "subtitle"),
             }
