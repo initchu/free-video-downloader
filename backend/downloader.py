@@ -52,13 +52,19 @@ class VideoDownloader:
         return f"{minutes}:{secs:02d}"
 
     def parse_video(self, url: str) -> dict:
-        """解析视频信息，不下载文件"""
+        """Parse video info without downloading."""
+        is_youtube = "youtube.com" in url or "youtu.be" in url
         ydl_opts = {
             "quiet": True,
             "no_warnings": True,
             "extract_flat": False,
             "noplaylist": True,
         }
+        if is_youtube:
+            # Avoid PO Token requirement (enforced on web client since 2025)
+            ydl_opts["extractor_args"] = {
+                "youtube": {"player_client": ["tv_simply", "web_embedded"]}
+            }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
 

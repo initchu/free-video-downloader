@@ -153,6 +153,9 @@ class SubtitleExtractor:
         return m.group(1) if m else None
 
     def _get_video_info(self, url: str) -> dict:
+        # Use tv_simply client for YouTube: it does not require PO Token for subtitle metadata.
+        # web client requires PO Token for Subs since YouTube's 2025 enforcement rollout.
+        is_youtube = "youtube.com" in url or "youtu.be" in url
         ydl_opts = {
             "quiet": True,
             "no_warnings": True,
@@ -162,6 +165,11 @@ class SubtitleExtractor:
             "writeautomaticsub": True,
             "skip_download": True,
         }
+        if is_youtube:
+            # tv_simply does not require PO Token; fall back to web_embedded if needed
+            ydl_opts["extractor_args"] = {
+                "youtube": {"player_client": ["tv_simply", "web_embedded"]}
+            }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
         if not info:
@@ -227,6 +235,7 @@ class SubtitleExtractor:
         Enable both writesubtitles and writeautomaticsub to handle YouTube
         cases where the detected type may not match what yt-dlp actually writes.
         """
+        is_youtube = "youtube.com" in url or "youtu.be" in url
         with tempfile.TemporaryDirectory() as tmp_dir:
             ydl_opts = {
                 "quiet": True,
@@ -239,6 +248,11 @@ class SubtitleExtractor:
                 "subtitlesformat": "vtt",
                 "outtmpl": os.path.join(tmp_dir, "subtitle"),
             }
+            if is_youtube:
+                # Avoid PO Token requirement by using clients that don't enforce it for Subs
+                ydl_opts["extractor_args"] = {
+                    "youtube": {"player_client": ["tv_simply", "web_embedded"]}
+                }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
 
