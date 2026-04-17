@@ -17,27 +17,6 @@ def _find_ffmpeg_path() -> Optional[str]:
         return None
 
 
-def _is_bgutil_available() -> bool:
-    """Check if the bgutil PO Token HTTP server is reachable (default port 4416)."""
-    try:
-        import httpx
-        resp = httpx.get("http://127.0.0.1:4416", timeout=2)
-        return resp.status_code < 500
-    except Exception:
-        return False
-
-
-def _youtube_extractor_args() -> dict:
-    """
-    Return yt-dlp extractor_args for YouTube.
-    - If bgutil HTTP server is running: use web client + bgutil POT provider.
-    - Otherwise: fall back to tv_simply/web_embedded (no PO Token required currently).
-    """
-    if _is_bgutil_available():
-        return {"youtube": {"player_client": ["web", "tv_simply"]}}
-    return {"youtube": {"player_client": ["tv_simply", "web_embedded"]}}
-
-
 class VideoDownloader:
     """yt-dlp 封装层，提供视频解析、下载、直链获取能力"""
 
@@ -74,16 +53,12 @@ class VideoDownloader:
 
     def parse_video(self, url: str) -> dict:
         """Parse video info without downloading."""
-        is_youtube = "youtube.com" in url or "youtu.be" in url
         ydl_opts = {
             "quiet": True,
             "no_warnings": True,
             "extract_flat": False,
             "noplaylist": True,
         }
-        if is_youtube:
-            # Avoid PO Token requirement (enforced on web client since 2025)
-            ydl_opts["extractor_args"] = _youtube_extractor_args()
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
 
