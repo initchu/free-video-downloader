@@ -85,12 +85,26 @@
         </button>
       </div>
 
-      <!-- 下载按钮 -->
+      <!-- Download buttons -->
       <div class="mt-6 flex flex-col items-stretch gap-3">
+        <!-- Direct download: opens new tab, button resets immediately -->
         <button
-          @click="$emit('download', selectedFormat)"
-          :disabled="!selectedFormat || downloading"
+          @click="$emit('download-direct', selectedFormat)"
+          :disabled="!selectedFormat"
           class="w-full inline-flex items-center justify-center gap-2 h-12 px-10 rounded-full bg-primary hover:bg-primary-dark text-white font-medium text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg cursor-pointer"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          直链下载（新窗口）
+        </button>
+
+        <!-- Server-side download: streams through backend -->
+        <button
+          @click="$emit('download-server', selectedFormat)"
+          :disabled="!selectedFormat || downloading"
+          class="w-full inline-flex items-center justify-center gap-2 h-12 px-10 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-medium text-base transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md cursor-pointer"
         >
           <svg v-if="downloading" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -100,13 +114,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          {{ downloading ? '下载中，请稍候...' : '立即下载' }}
+          {{ downloading ? '下载中，请稍候...' : '服务器合成下载' }}
         </button>
-        <!-- AI 总结按钮（重新总结） -->
+
+        <!-- AI summary button -->
         <button
           @click="$emit('summarize')"
           :disabled="summarizing"
-          class="w-full inline-flex items-center justify-center gap-2 h-12 px-8 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white font-medium text-base transition-all shadow-sm hover:shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-primary"
+          class="w-full inline-flex items-center justify-center gap-2 h-12 px-8 rounded-full border-2 border-gray-300 text-text-secondary hover:border-primary hover:text-primary font-medium text-base transition-all shadow-sm hover:shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg v-if="summarizing" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -118,6 +133,7 @@
           </svg>
           {{ summarizing ? '总结中...' : 'AI 总结' }}
         </button>
+
         <span v-if="selectedFormat" class="text-xs text-text-muted text-center">
           已选择: {{ getSelectedLabel() }}
         </span>
@@ -135,7 +151,7 @@ const props = defineProps({
   downloading: Boolean,
   summarizing: Boolean,
 })
-defineEmits(['download', 'summarize'])
+defineEmits(['download-direct', 'download-server', 'summarize'])
 
 const thumbnailUrl = computed(() => {
   if (!props.video.thumbnail) return ''

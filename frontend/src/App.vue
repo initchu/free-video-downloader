@@ -25,7 +25,8 @@
                 :video="videoData"
                 :downloading="downloading"
                 :summarizing="summarizing"
-                @download="handleDownload"
+                @download-direct="handleDownloadDirect"
+                @download-server="handleDownloadServer"
                 @summarize="handleSummarize"
               />
             </div>
@@ -214,11 +215,9 @@ async function handleParse(url) {
   }
 }
 
-async function handleDownload(formatId) {
-  downloading.value = true
+// Direct download: opens new tab, button resets immediately
+async function handleDownloadDirect(formatId) {
   try {
-    // Try direct URL first — lets the browser download straight from the source,
-    // avoiding routing large files through our server.
     const directRes = await getDirectUrl(currentUrl.value, formatId)
     if (directRes?.data?.direct_url) {
       const a = document.createElement('a')
@@ -229,13 +228,18 @@ async function handleDownload(formatId) {
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
-      return
+    } else {
+      alert('该视频不支持直链下载，请使用服务器合成下载')
     }
-  } catch {
-    // Direct URL not available, fall through to server-side download
+  } catch (err) {
+    const msg = err.response?.data?.detail?.error || err.response?.data?.detail || err.message
+    alert('直链获取失败：' + msg + '\n请尝试使用服务器合成下载')
   }
+}
 
-  // Fallback: server-side download (for platforms that don't expose direct URLs)
+// Server-side download: streams through backend
+async function handleDownloadServer(formatId) {
+  downloading.value = true
   try {
     const response = await downloadViaServer(currentUrl.value, formatId)
     const contentDisposition = response.headers['content-disposition']
