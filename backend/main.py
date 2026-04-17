@@ -44,12 +44,28 @@ app = FastAPI(
 # 生产环境通过 ALLOWED_ORIGINS 环境变量指定前端域名（逗号分隔）
 # 例如：ALLOWED_ORIGINS=https://yourapp.pages.dev,https://yourdomain.com
 # 未配置时默认允许所有来源（仅适合本地开发）
+import re
+
+# Production: set ALLOWED_ORIGINS env var (comma-separated exact origins)
+# Set ALLOWED_ORIGIN_PATTERNS for wildcard subdomain patterns (comma-separated regex)
+# e.g. ALLOWED_ORIGIN_PATTERNS=https://.*\.free-video-downloader-v5i\.pages\.dev
 _raw_origins = os.getenv("ALLOWED_ORIGINS", "")
-allow_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()] or ["*"]
+_exact_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
+_raw_patterns = os.getenv("ALLOWED_ORIGIN_PATTERNS", "")
+_origin_patterns = [re.compile(p.strip()) for p in _raw_patterns.split(",") if p.strip()]
+
+def is_origin_allowed(origin: str) -> bool:
+    if not _exact_origins and not _origin_patterns:
+        return True  # allow all when nothing configured (local dev)
+    if origin in _exact_origins:
+        return True
+    return any(p.fullmatch(origin) for p in _origin_patterns)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins,
+    allow_origins=_exact_origins if _exact_origins else ["*"],
+    allow_origin_regex=_raw_patterns.strip() or None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
