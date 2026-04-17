@@ -92,7 +92,7 @@ import PlatformSection from './components/PlatformSection.vue'
 import AppFooter from './components/AppFooter.vue'
 import AuthModal from './components/AuthModal.vue'
 import PasswordGate from './components/PasswordGate.vue'
-import { parseVideo, downloadViaServer } from './api/video.js'
+import { parseVideo, downloadViaServer, getDirectUrl } from './api/video.js'
 import { getSavedUser, fetchMe, logout as logoutApi, isLoggedIn } from './api/auth.js'
 import { createCheckoutSession } from './api/payment.js'
 
@@ -217,6 +217,26 @@ async function handleParse(url) {
 async function handleDownload(formatId) {
   downloading.value = true
   try {
+    // Try direct URL first — lets the browser download straight from the source,
+    // avoiding routing large files through our server.
+    const directRes = await getDirectUrl(currentUrl.value, formatId)
+    if (directRes?.data?.direct_url) {
+      const a = document.createElement('a')
+      a.href = directRes.data.direct_url
+      a.download = directRes.data.title || 'video'
+      a.target = '_blank'
+      a.rel = 'noopener noreferrer'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      return
+    }
+  } catch {
+    // Direct URL not available, fall through to server-side download
+  }
+
+  // Fallback: server-side download (for platforms that don't expose direct URLs)
+  try {
     const response = await downloadViaServer(currentUrl.value, formatId)
     const contentDisposition = response.headers['content-disposition']
     let filename = 'video.mp4'
@@ -232,7 +252,6 @@ async function handleDownload(formatId) {
     a.click()
     window.URL.revokeObjectURL(url)
   } catch (err) {
-      // responseType: 'blob' means error response body is also a blob, parse manually
     let msg = err.message || '请稍后重试'
     if (err.response?.data instanceof Blob) {
       try {
