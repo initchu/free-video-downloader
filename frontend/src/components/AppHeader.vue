@@ -10,9 +10,7 @@
         </div>
         <span class="text-base font-semibold text-text-primary tracking-tight">褚成志的在线视频下载器</span>
       </a>
-      <nav class="hidden md:flex items-center gap-5 text-sm text-text-secondary" aria-label="主导航">
-        <a href="#features" class="hover:text-primary transition-colors">功能</a>
-      </nav>
+
       <div class="flex items-center gap-3">
         <!-- 未登录 -->
         <template v-if="!user">
