@@ -15,6 +15,28 @@ def _is_bilibili_url(url: str) -> bool:
     return "bilibili.com" in url or "b23.tv" in url
 
 
+def _is_bgutil_available() -> bool:
+    """Check if the bgutil PO Token HTTP server is reachable (default port 4416)."""
+    try:
+        resp = httpx.get("http://127.0.0.1:4416", timeout=2)
+        return resp.status_code < 500
+    except Exception:
+        return False
+
+
+def _youtube_extractor_args() -> dict:
+    """
+    Return yt-dlp extractor_args for YouTube.
+    - If bgutil HTTP server is running: use web client + bgutil POT provider (full subtitle support).
+    - Otherwise: fall back to tv_simply/web_embedded which don't require PO Token currently.
+    """
+    if _is_bgutil_available():
+        # bgutil plugin handles PO Token automatically; use web client for best subtitle coverage
+        return {"youtube": {"player_client": ["web", "tv_simply"]}}
+    # Fallback: clients that currently don't enforce PO Token for Subs
+    return {"youtube": {"player_client": ["tv_simply", "web_embedded"]}}
+
+
 class SubtitleExtractor:
     """从视频 URL 提取平台字幕（人工字幕 > 自动字幕）"""
 
@@ -167,9 +189,7 @@ class SubtitleExtractor:
         }
         if is_youtube:
             # tv_simply does not require PO Token; fall back to web_embedded if needed
-            ydl_opts["extractor_args"] = {
-                "youtube": {"player_client": ["tv_simply", "web_embedded"]}
-            }
+            ydl_opts["extractor_args"] = _youtube_extractor_args()
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
         if not info:
@@ -250,9 +270,7 @@ class SubtitleExtractor:
             }
             if is_youtube:
                 # Avoid PO Token requirement by using clients that don't enforce it for Subs
-                ydl_opts["extractor_args"] = {
-                    "youtube": {"player_client": ["tv_simply", "web_embedded"]}
-                }
+                ydl_opts["extractor_args"] = _youtube_extractor_args()
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
 
